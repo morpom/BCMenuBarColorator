@@ -17,13 +17,17 @@
     }
 
     // Retrieve the URL-color mappings from storage and apply the color on page load
-    chrome.storage.sync.get('url_dict', (data) => {
-        const url_dict = data.url_dict || {};
-        changeBackgroundColor(url_dict);
-    });
+    try {
+        chrome.storage.sync.get('url_dict', (data) => {
+            const url_dict = data.url_dict || {};
+            changeBackgroundColor(url_dict);
+        });
+    } catch (error) {
+        console.error('Error retrieving URL-color mappings:', error);
+    }
 
     // Listen for messages from the popup script
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message) => {
         if (message.action === 'updateColor') {
             const { url, color } = message;
 
@@ -34,14 +38,4 @@
             }
         }
     });
-
-    // Observe DOM changes in case elements are dynamically loaded
-    const observer = new MutationObserver(() => {
-        chrome.storage.sync.get('url_dict', (data) => {
-            const url_dict = data.url_dict || {};
-            changeBackgroundColor(url_dict);
-        });
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-
 })();

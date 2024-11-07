@@ -57,17 +57,26 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length > 0) {
             let currentUrl = tabs[0].url;
-            // Get the part of the URL before the first "?"
-            let urlWithoutParams = currentUrl.split('?')[0];
-            urlInput.value = urlWithoutParams;  // Prefill the input field
+            // Get the part of the URL before the first "?" if it exists
+            let baseUrl = currentUrl;
+            const queryIndex = currentUrl.indexOf('?');
+            if (queryIndex !== -1) {
+                baseUrl = currentUrl.substring(0, queryIndex + 1);
+            }
+            urlInput.value = baseUrl;  // Prefill the input field
         }
     });
 
 
     // Load existing URLs and colors on page load
     chrome.storage.sync.get('url_dict', (data) => {
-        const url_dict = data.url_dict || {};
-        updateUrlList(url_dict);  // Display the saved URL-color pairs
+        if (chrome.runtime.lastError) {
+            console.error('Error loading url_dict:', chrome.runtime.lastError);
+        } else {
+            const url_dict = data.url_dict || {};
+            console.log('url_dict loaded successfully:', url_dict);
+            updateUrlList(url_dict);
+        }
     });
 
     // Toggle the help window when the help button is clicked
@@ -92,13 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Save the updated dictionary back to storage
                 chrome.storage.sync.set({ url_dict }, () => {
-                    updateUrlList(url_dict);
-                    urlInput.value = '';
-
-                    // Send a message to the content script to apply the new color immediately
-                    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                        chrome.tabs.sendMessage(tabs[0].id, { action: 'updateColor', url: url, color: color });
-                    });
+                    if (chrome.runtime.lastError) {
+                        console.error('Error saving url_dict:', chrome.runtime.lastError);
+                    } else {
+                        console.log('url_dict saved successfully:', url_dict);
+                        updateUrlList(url_dict);
+    
+                        // Send a message to the content script to apply the new color immediately
+                        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+                            chrome.tabs.sendMessage(tabs[0].id, { action: 'updateColor', url: url, color: color });
+                        });
+                    }
                 });
             });
         }
