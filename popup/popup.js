@@ -6,6 +6,9 @@ const urlList = document.getElementById('urlList');
 const helpButton = document.getElementById('helpButton');
 const helpWindow = document.getElementById('helpWindow');
 
+// Define the toggle variable
+let showAll = false;
+
 // Utility functions
 function updateUrlList(url_dict) {
     urlList.innerHTML = '';
@@ -81,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStoredData();
     setupHelpButton();
     setupAddUrlColorButton();
+    setupShowOrHideButton();
 });
 
 function initializeUI() {
@@ -137,6 +141,26 @@ function setupAddUrlColorButton() {
                     });
                 });
             });
+        }
+    });
+}
+
+// Setup ShowOrHideButton
+function setupShowOrHideButton() {
+    const showOrHideButton = document.getElementById('ShowOrHideButton');
+    showOrHideButton.textContent = 'Show All'; // Default label
+
+    showOrHideButton.addEventListener('click', () => {
+        if (!showAll) {
+            console.log('Show all clicked');
+            showAll = true;
+            showOrHideButton.textContent = 'Hide All';
+            document.querySelectorAll('span[role="button"][aria-expanded="false"]').forEach(el => el.click());
+        } else {
+            console.log('Hide all clicked');
+            showAll = false;
+            showOrHideButton.textContent = 'Show All';
+            document.querySelectorAll('span[role="button"][aria-expanded="true"]').forEach(el => el.click());
         }
     });
 }

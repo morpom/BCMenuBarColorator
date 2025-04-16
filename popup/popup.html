@@ -69,6 +69,19 @@
         align-items: center;
         justify-content: center;
       }
+      #ShowOrHideButton {
+        position: absolute;
+        top: 10px;
+        right: 50px;
+        width: 100px;
+        height: 20px;
+        background-color: rgb(73, 73, 247);
+        color: white;
+        border: none;
+        border-radius: 3px;
+        font-size: 12px;
+        cursor: pointer;
+      }
       #helpWindow {
         display: none;
         position: absolute;
@@ -101,6 +114,7 @@
     <h4>Saved URLs with Colors</h4>
     <ul id="urlList"></ul>
 
+    <button id="ShowOrHideButton">ShowOrHideButton</button>
     <button id="helpButton">?</button>
     <div id="helpWindow">
       <p id="helpTextLbl">Enter the URL prefix to change the color of the Business Central top bar. You can add multiple URLs. By default, the URL is separated at the first '?'. However, you can freely choose up to which character the URL should be recognized. Just copy the start of the URL into the Base-URL field."</p>
