@@ -58,7 +58,7 @@
     }
 
     // Message listeners
-    chrome.runtime.onMessage.addListener((message) => {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.action === 'updateColor') {
             applyDarkMode(message.darkMode); // Apply the dark mode state
             const productMenuBar = document.querySelector('[id=product-menu-bar], [id=O365_NavHeader]');
@@ -67,6 +67,29 @@
             }
         } else if (message.action === 'refreshStyles') {
             refreshStyles();
+        } else if (message.action === 'openTableExternally') {
+            let el = document.querySelectorAll('[role="textbox"][tabindex="0"]')[1];
+            if (el) {
+                const match = el.textContent.match(/\(([^)]+)\)/);
+                if (match) {
+                    let baseURL = window.location.href.split('?')[0];
+                    let URLToOpen = `${baseURL}?table=${match[1]}`;
+                    window.open(URLToOpen, '_blank');
+                }
+            } else {
+                console.log('Table ID not found.');
+            }
+        } else if (message.action === 'checkTableIdPresent') {
+            let el = document.querySelectorAll('[role="textbox"][tabindex="0"]')[1];
+            let found = false;
+            if (el) {
+                const match = el.textContent.match(/\(([^)]+)\)/);
+                if (match) {
+                    found = true;
+                }
+            }
+            sendResponse({ found });
+            return true; // Indicate async response
         }
     });
 

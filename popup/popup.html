@@ -59,7 +59,7 @@
         right: 10px;
         width: 20px;
         height: 20px;
-        background-color: rgb(73, 73, 247);
+        background-color: rgb(32, 69, 128);
         color: white;
         border: none;
         border-radius: 50%;
@@ -69,6 +69,22 @@
         align-items: center;
         justify-content: center;
       }
+        #openTableButton {
+          position: absolute;
+          top: 10px;
+          right: 40px;
+          width: 20px;
+          height: 20px;
+          background-color: rgb(196, 65, 0);
+          color: white;
+          border: none;
+          border-radius: 50%;
+          font-size: 15px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
       #helpWindow {
         display: none;
         position: absolute;
@@ -102,8 +118,11 @@
     <ul id="urlList"></ul>
 
     <button id="helpButton">?</button>
+    <button id="openTableButton" style="display: flex; align-items: center; justify-content: center; padding: 0;">
+      <span style="display: flex; align-items: flex-start; justify-content: center; width: 100%; height: 100%; font-weight: bold; position: relative; top: -1px;">&#8599;</span>
+    </button>
     <div id="helpWindow">
-      <p id="helpTextLbl">Enter the URL prefix to change the color of the Business Central top bar. You can add multiple URLs. By default, the URL is separated at the first '?'. However, you can freely choose up to which character the URL should be recognized. Just copy the start of the URL into the Base-URL field."</p>
+      <p id="helpTextLbl"></p>
     </div>
     <script src="popup.js"></script>
   </body>

@@ -18,6 +18,12 @@
       "message": "Saved URLs with Colors"
     },
     "helpTextLbl": {
-      "message": "Enter the URL prefix to change the color of the Business Central top bar.\nYou can add multiple URLs. By default, the URL is separated at the first '?'.\nHowever, you can freely choose up to which character the URL should be recognized.\nJust copy the start of the URL into the Base-URL field.\n\n✨New in Version 3:✨\nBy clicking the moon, you can activate the dark mode.\nAlso, the extension is now available in Chrome!"
+      "message": "Enter the URL prefix to change the color of the Business Central top bar.\nYou can add multiple URLs. By default, the URL is separated at the first '?'.\nHowever, you can freely choose up to which character the URL should be recognized.\nJust copy the start of the URL into the Base-URL field.\n\n✨New in Version 3:✨\nBy clicking the moon, you can activate the dark mode.\nAlso, it is now possible to open the table for each page with one click."
+    },
+    "openTableLbl": {
+      "message": "Open Table in new Tab"
+    },
+    "openTableHelpLbl": {
+      "message": "Open Table in new Tab is currently not possible.\nPlease make sure to open Page Inspection first."
     }
 }
