@@ -13,7 +13,7 @@ function updateUrlList(url_dict) {
         const li = document.createElement('li');
         li.innerHTML = `
             <button class="mode-btn" data-url="${url}">${darkMode ? '&#x1F312;' : '&#x1F314;'}</button>
-            <span style="font-weight: bold; color:${color}; text-align: left; display: inline-block; width: 100%; margin-left: 8px;">${url}</span>
+            <span class="url-label" style="color:${color};">${url}</span>
             <button class="delete-btn" data-url="${url}">x</button>
         `;
         urlList.appendChild(li);
@@ -89,7 +89,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function checkTableIdAndToggleButton() {
     const openTableButton = document.getElementById('openTableButton');
     if (!openTableButton) return;
-    openTableButton.style.display = 'inline-block';
+    openTableButton.textContent = '↗';
+    openTableButton.style.display = 'inline-flex';
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length > 0) {
             chrome.tabs.sendMessage(tabs[0].id, { action: 'checkTableIdPresent' }, (response) => {
@@ -98,7 +99,6 @@ function checkTableIdAndToggleButton() {
                     openTableButton.title = chrome.i18n.getMessage('openTableLbl');
                 } else {
                     openTableButton.disabled = true;
-                    openTableButton.style.backgroundColor = '#888';
                     openTableButton.title = chrome.i18n.getMessage('openTableHelpLbl');
                 }
             });
@@ -108,10 +108,12 @@ function checkTableIdAndToggleButton() {
 
 function initializeUI() {
     document.querySelector('h3').textContent = chrome.i18n.getMessage('extensionNameLbl');
-    document.querySelector('input').textContent = chrome.i18n.getMessage('EnterURLLbl');
-    document.querySelector('button').textContent = chrome.i18n.getMessage('AddURLLbl');
+    urlInput.placeholder = chrome.i18n.getMessage('EnterURLLbl');
+    addUrlColorButton.textContent = chrome.i18n.getMessage('AddURLLbl');
+    document.querySelector('label[for="url"]').textContent = chrome.i18n.getMessage('baseURLLbl') || 'Base URL';
     document.querySelector('label[for="color"]').textContent = chrome.i18n.getMessage('ColorLbl');
-    document.querySelector('h4').textContent = chrome.i18n.getMessage('URLListLbl');
+    document.querySelector('.list-title').textContent = chrome.i18n.getMessage('URLListLbl');
+    helpButton.title = chrome.i18n.getMessage('helpLbl') || 'Help';
 
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length > 0) {
@@ -138,6 +140,12 @@ function setupHelpButton() {
             helpWindow.style.display = 'block';
             helpWindow.innerHTML = chrome.i18n.getMessage('helpTextLbl').replace(/\n/g, '<br>');
         } else {
+            helpWindow.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!helpWindow.contains(event.target) && !helpButton.contains(event.target)) {
             helpWindow.style.display = 'none';
         }
     });
