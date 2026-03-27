@@ -3,16 +3,25 @@
     const url = window.location.href;
 
     // Core functions
+    function applyMenuBarColor(color) {
+        let style = document.getElementById('bc-colorator-menubar-style');
+        if (!style) {
+            style = document.createElement('style');
+            style.id = 'bc-colorator-menubar-style';
+            document.head.appendChild(style);
+        }
+        style.textContent = color
+            ? `#product-menu-bar, #O365_NavHeader, #product-menu-bar *, #O365_NavHeader * { background-color: ${color} !important; border-color: transparent !important; outline-color: transparent !important; box-shadow: none !important; }`
+            : '';
+    }
+
     function changeBackgroundColor(url_dict) {
         let longestMatch = null;
         for (const [key, value] of Object.entries(url_dict)) {
             if (url.startsWith(key)) {
                 if (longestMatch === null || key.length > longestMatch.length) {
                     longestMatch = key;
-                    const productMenuBar = document.querySelector('[id=product-menu-bar], [id=O365_NavHeader]');
-                    if (productMenuBar) {
-                        productMenuBar.style.backgroundColor = value[0];
-                    }
+                    applyMenuBarColor(value[0]);
                     applyDarkMode(value[1]);
                 }
             }
@@ -61,10 +70,7 @@
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.action === 'updateColor') {
             applyDarkMode(message.darkMode); // Apply the dark mode state
-            const productMenuBar = document.querySelector('[id=product-menu-bar], [id=O365_NavHeader]');
-            if (productMenuBar) {
-                productMenuBar.style.backgroundColor = message.color;
-            }
+            applyMenuBarColor(message.color);
         } else if (message.action === 'refreshStyles') {
             refreshStyles();
         } else if (message.action === 'openTableExternally') {
@@ -95,23 +101,18 @@
 
     function refreshStyles() {
         chrome.storage.sync.get('url_dict', (data) => {
-            const productMenuBar = document.querySelector('[id=product-menu-bar], [id=O365_NavHeader]');
             const url_dict = data.url_dict || {};
             let matched = false;
             for (const [key, value] of Object.entries(url_dict)) {
                 if (url.startsWith(key)) {
-                    if (productMenuBar) {
-                        productMenuBar.style.backgroundColor = value[0];
-                    }
+                    applyMenuBarColor(value[0]);
                     applyDarkMode(value[1]);
                     matched = true;
                     break;
                 }
             }
             if (!matched) {
-                if (productMenuBar) {
-                    productMenuBar.style.backgroundColor = '#282828';
-                }
+                applyMenuBarColor('#282828');
                 applyDarkMode(false);
             }
         });
