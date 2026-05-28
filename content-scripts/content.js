@@ -2,133 +2,137 @@
     'use strict';
     const url = window.location.href;
 
-    // Core functions
-    function changeBackgroundColor(url_dict) {
-        let longestMatch = null;
-        for (const [key, value] of Object.entries(url_dict)) {
-            if (url.startsWith(key)) {
-                if (longestMatch === null || key.length > longestMatch.length) {
-                    longestMatch = key;
-                    const productMenuBar = document.querySelector('[id=product-menu-bar], [id=O365_NavHeader]');
-                    if (productMenuBar) {
-                        productMenuBar.style.backgroundColor = value[0];
-                    }
-                    applyDarkMode(value[1]);
-                }
-            }
+    // Constants
+    const MENUBAR_STYLE_ID = 'bc-colorator-menubar-style';
+    const DARK_MODE_STYLE_ID = 'dark-mode-style';
+    const DEFAULT_MENUBAR_COLOR = '#282828';
+    const TABLE_ID_SELECTOR = '[role="textbox"][tabindex="0"]';
+
+    const MENUBAR_CSS = (color) =>
+        `#product-menu-bar, #O365_NavHeader, #product-menu-bar *, #O365_NavHeader * {
+            background-color: ${color} !important;
+            border-color: transparent !important;
+            outline-color: transparent !important;
+            box-shadow: none !important;
+        }`;
+
+    const DARK_MODE_CSS = `
+        html {
+            filter: invert(1) hue-rotate(180deg) contrast(0.9) brightness(1.1);
         }
+        img,
+        video,
+        canvas,
+        [style*="background-image"] {
+            filter: invert(1) hue-rotate(180deg) contrast(1.0) brightness(1.0) !important;
+        }
+    `;
+
+    // Core functions
+    function applyMenuBarColor(color) {
+        let style = document.getElementById(MENUBAR_STYLE_ID);
+        if (!style) {
+            style = document.createElement('style');
+            style.id = MENUBAR_STYLE_ID;
+            document.head.appendChild(style);
+        }
+        style.textContent = color ? MENUBAR_CSS(color) : '';
     }
 
     function applyDarkMode(darkModeOn) {
         const iframe = document.querySelector('iframe');
-    
+
         if (!iframe || !iframe.contentDocument) {
-            console.warn('Dark mode: iframe not found or not accessible.');
             return;
         }
-    
+
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-    
+
         if (darkModeOn) {
-            console.log('Dark mode on (inside iframe)');
-            if (iframeDoc.getElementById('dark-mode-style')) {
+            if (iframeDoc.getElementById(DARK_MODE_STYLE_ID)) {
                 return;
             }
             const style = iframeDoc.createElement('style');
-            style.id = 'dark-mode-style';
-            style.textContent = `
-                html {
-                    filter: invert(1) hue-rotate(180deg) contrast(0.9) brightness(1.1);
-                }
-
-                img,
-                video,
-                canvas,
-                [style*="background-image"] {
-                    filter: invert(1) hue-rotate(180deg) contrast(1.0) brightness(1.0) !important;
-                }
-            `;
+            style.id = DARK_MODE_STYLE_ID;
+            style.textContent = DARK_MODE_CSS;
             iframeDoc.documentElement.appendChild(style);
         } else {
-            const style = iframeDoc.getElementById('dark-mode-style');
+            const style = iframeDoc.getElementById(DARK_MODE_STYLE_ID);
             if (style) {
                 style.remove();
             }
         }
     }
 
+    function findLongestMatchingUrl(url_dict) {
+        let longestKey = null;
+        for (const key of Object.keys(url_dict)) {
+            if (url.startsWith(key)) {
+                if (!longestKey || key.length > longestKey.length) {
+                    longestKey = key;
+                }
+            }
+        }
+        return longestKey;
+    }
+
+    function applyStyles(url_dict) {
+        const matchedKey = findLongestMatchingUrl(url_dict);
+        if (matchedKey) {
+            const [color, darkMode] = url_dict[matchedKey];
+            applyMenuBarColor(color);
+            applyDarkMode(darkMode);
+        } else {
+            applyMenuBarColor(DEFAULT_MENUBAR_COLOR);
+            applyDarkMode(false);
+        }
+    }
+
+    function getTableIdElement() {
+        return document.querySelectorAll(TABLE_ID_SELECTOR)[1];
+    }
+
+    function extractTableId(el) {
+        if (!el) return null;
+        const match = el.textContent.match(/\(([^)]+)\)/);
+        return match ? match[1] : null;
+    }
+
     // Message listeners
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.action === 'updateColor') {
-            applyDarkMode(message.darkMode); // Apply the dark mode state
-            const productMenuBar = document.querySelector('[id=product-menu-bar], [id=O365_NavHeader]');
-            if (productMenuBar) {
-                productMenuBar.style.backgroundColor = message.color;
-            }
+            applyDarkMode(message.darkMode);
+            applyMenuBarColor(message.color);
         } else if (message.action === 'refreshStyles') {
-            refreshStyles();
+            chrome.storage.sync.get('url_dict', (data) => {
+                applyStyles(data.url_dict || {});
+            });
         } else if (message.action === 'openTableExternally') {
-            let el = document.querySelectorAll('[role="textbox"][tabindex="0"]')[1];
-            if (el) {
-                const match = el.textContent.match(/\(([^)]+)\)/);
-                if (match) {
-                    let baseURL = window.location.href.split('?')[0];
-                    let URLToOpen = `${baseURL}?table=${match[1]}`;
-                    window.open(URLToOpen, '_blank');
-                }
-            } else {
-                console.log('Table ID not found.');
+            const tableId = extractTableId(getTableIdElement());
+            if (tableId) {
+                const baseURL = window.location.href.split('?')[0];
+                window.open(`${baseURL}?table=${tableId}`, '_blank');
             }
         } else if (message.action === 'checkTableIdPresent') {
-            let el = document.querySelectorAll('[role="textbox"][tabindex="0"]')[1];
-            let found = false;
-            if (el) {
-                const match = el.textContent.match(/\(([^)]+)\)/);
-                if (match) {
-                    found = true;
-                }
-            }
-            sendResponse({ found });
-            return true; // Indicate async response
+            sendResponse({ found: !!extractTableId(getTableIdElement()) });
+            return true;
         }
     });
 
-    function refreshStyles() {
-        chrome.storage.sync.get('url_dict', (data) => {
-            const productMenuBar = document.querySelector('[id=product-menu-bar], [id=O365_NavHeader]');
-            const url_dict = data.url_dict || {};
-            let matched = false;
-            for (const [key, value] of Object.entries(url_dict)) {
-                if (url.startsWith(key)) {
-                    if (productMenuBar) {
-                        productMenuBar.style.backgroundColor = value[0];
-                    }
-                    applyDarkMode(value[1]);
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
-                if (productMenuBar) {
-                    productMenuBar.style.backgroundColor = '#282828';
-                }
-                applyDarkMode(false);
-            }
-        });
-    }
-
-    // DOM observer
+    // DOM observer (debounced to avoid excessive storage reads)
+    let debounceTimer;
     const observer = new MutationObserver(() => {
-        chrome.storage.sync.get('url_dict', (data) => {
-            const url_dict = data.url_dict || {};
-            changeBackgroundColor(url_dict);
-        });
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            chrome.storage.sync.get('url_dict', (data) => {
+                applyStyles(data.url_dict || {});
+            });
+        }, 200);
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
     // Initial setup
     chrome.storage.sync.get('url_dict', (data) => {
-        const url_dict = data.url_dict || {};
-        changeBackgroundColor(url_dict);
+        applyStyles(data.url_dict || {});
     });
 })();
